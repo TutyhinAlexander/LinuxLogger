@@ -4,6 +4,7 @@
 #include <memory.h>
 #include <string>
 #include <dirent.h>
+#include <sys/stat.h> 
 
 namespace DebugTools
 {
@@ -18,6 +19,70 @@ namespace DebugTools
 		static Logger instance;
 		return instance;
 	}
+	
+	void Logger::OpenLogFile(const char* fileName, int maxLogFiles)
+	{
+		const char* logsDir = "./Logs/";
+		std::string logPath = logsDir;
+		struct stat st;
+		// check if Logs dir exist
+		if ((stat(logsDir, &st) == 0) && (((st.st_mode) & S_IFMT) == S_IFDIR))
+		{
+			//Log("'%s' is present\n", logsDir);
+			struct dirent** namelist;
+			int n = scandir(logsDir, &namelist, NULL, alphasort);
+			if (n < 0)
+			{
+				perror("scandir");
+				return;
+			}
+			else 
+			{
+				// delete old logs
+				int logCounter = 0;
+				while (n--) 
+				{
+					if(namelist[n]->d_type == DT_REG) // test if item is a file
+					{
+						//Log("file: %s\n", namelist[n]->d_name);
+						std::string fn = namelist[n]->d_name;
+						if(fn.find(fileName) == 0)
+						{
+							++logCounter;
+							//Log("find logFile logCounter=%i\n", logCounter);
+							if(logCounter >= maxLogFiles)
+							{
+								fn.insert(0, logPath);
+								std::remove(fn.c_str());
+								//Log("file '%s' was removed\n", fn.c_str());
+							}
+						}
+					}
+					free(namelist[n]);
+				}
+				free(namelist);
+			}
+			
+		}
+		else // need create Logs dir
+		{
+			if(mkdir(logsDir, 0755) != 0)
+			{
+				perror("mkdir");
+				return;
+			}
+			Log("'%s' was created\n", logsDir);
+		}
+		
+		logPath.append(fileName);
+		time_t timestamp = time(NULL);
+		struct tm datetime = *localtime(&timestamp);
+		strftime(timebuf, 50, "_[%Y-%b-%d_%H:%M:%S].txt", &datetime);
+		logPath.append(timebuf);
+
+		Log("logPath: '%s'\n", logPath.c_str());
+		logFile = fopen(logPath.c_str(), "w");
+	}
 
 	void Logger::Init(LoggerParams& initParams)
 	{
@@ -28,51 +93,7 @@ namespace DebugTools
 			tzset();
 
 		if(initParams.fileName)
-		{
-			std::string logPath = "./Logs/";
-			logPath.append(initParams.fileName);
-			if(initParams.maxLogFiles > 1)
-			{
-				/*struct dirent** namelist;
-				int n;
-
-				n = scandir(".", &namelist, NULL, alphasort);
-				if (n < 0)
-					perror("scandir");
-				else {
-					while (n--) {
-						printf("%s\n", namelist[n]->d_name);
-						free(namelist[n]);
-					}
-					free(namelist);
-				}*/
-
-/*
-				logPath.append("_[");
-				strdate(logger.timebuf, 9);
-				logPath.append(logger.timebuf);
-				logPath.append("_");
-				strtime(logger.timebuf, 128);
-				logPath.append(logger.timebuf);
-				logPath.append("].txt");
-				*/
-
-				//Logger::Log("logPath: '%s'\n", logPath.c_str());
-				
-
-				/*
-				List<string> filesArr = Directory.GetFiles(logPath, appName + "_*.txt").ToList();
-				filesArr.Sort();
-
-				if (filesArr.Count > 9)
-					File.Delete(filesArr[0]);
-				logPath = Path.Combine(logPath, fileName);
-				*/
-			}
-			else
-				logPath.append(".txt");
-			//getInstance().logFile = fopen(logPath.c_str(), "w");
-		}
+			logger.OpenLogFile(initParams.fileName, initParams.maxLogFiles);
 	}
 
 	void Logger::Log(const char* msg, ...)
@@ -82,16 +103,13 @@ namespace DebugTools
 		{
 			time_t timestamp = time(NULL);
 			struct tm datetime = *localtime(&timestamp);
-			strftime(logger.timebuf, 50, "%Y-%b-%d_%H:%M:%S", &datetime);
-			//_strtime_s(logger.timebuf, 128);
+			strftime(logger.timebuf, 50, "[%Y-%b-%d_%H:%M:%S]", &datetime);
 
 			if(logger.logFile)
-				//fprintf(logger.logFile, "[%i] ", tm.tm_year);
-				fprintf(logger.logFile, "[%s] ", logger.timebuf);
+				fprintf(logger.logFile, "%s ", logger.timebuf);
 
 			if(logger.logToConsole)
-				//printf("[%i] ", tm.tm_year);
-				printf("[%s] ", logger.timebuf);
+				printf("%s ", logger.timebuf);
 		}
 
 		va_list args;

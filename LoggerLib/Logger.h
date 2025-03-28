@@ -23,6 +23,7 @@ namespace DebugTools
 		bool logToConsole = true;
 
 		static Logger& getInstance();
+		void OpenLogFile(const char* fileName, int maxLogFiles);
 	
 	public:
 		~Logger();
