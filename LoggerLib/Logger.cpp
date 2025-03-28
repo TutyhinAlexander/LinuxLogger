@@ -8,6 +8,8 @@
 
 namespace DebugTools
 {
+	Logger Logger::instance;
+	
 	Logger::~Logger()
 	{
 		if(getInstance().logFile)
@@ -16,7 +18,6 @@ namespace DebugTools
 
 	Logger& Logger::getInstance()
 	{
-		static Logger instance;
 		return instance;
 	}
 	
@@ -86,7 +87,7 @@ namespace DebugTools
 
 	void Logger::Init(LoggerParams& initParams)
 	{
-		Logger logger = getInstance();
+		Logger& logger = getInstance();
 		logger.useTimestamp = initParams.useTimestamp;
 		logger.logToConsole = initParams.logToConsole;
 		if(logger.useTimestamp)
@@ -98,7 +99,7 @@ namespace DebugTools
 
 	void Logger::Log(const char* msg, ...)
 	{
-		Logger logger = getInstance();
+		Logger& logger = getInstance();
 		if (logger.useTimestamp)
 		{
 			time_t timestamp = time(NULL);

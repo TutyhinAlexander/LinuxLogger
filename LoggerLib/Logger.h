@@ -16,6 +16,7 @@ namespace DebugTools
 	class Logger
 	{
 	private:
+		static Logger instance;
 		LoggerParams params;
 		FILE* logFile = NULL;
 		char timebuf[128];
