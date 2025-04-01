@@ -1,11 +1,11 @@
-#include "Logger.h"
+#include "Logger/Logger.h"
 
 using namespace DebugTools;
 
 int main()
 {
     LoggerParams loggerParams;
-    loggerParams.fileName = "FCA";
+    loggerParams.fileName = "Log";
     loggerParams.maxLogFiles = 10;
     loggerParams.useTimestamp = true;
     loggerParams.logToConsole = true;
