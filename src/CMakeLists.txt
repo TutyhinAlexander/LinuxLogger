@@ -4,7 +4,7 @@ add_library(DebugTools::Logger ALIAS Logger)
 target_compile_features(Logger PRIVATE cxx_std_14)
 target_sources(Logger PRIVATE Logger.cpp)
 target_include_directories(Logger PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>"
-      "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}>"
+      #"$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}>"
 )
 
 ## Installing
