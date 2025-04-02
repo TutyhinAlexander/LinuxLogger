@@ -65,8 +65,8 @@ Stream logger, supports output into file and console
 1. Before start logging, you should call `Logger::Init(loggerParams);`
 where `loggerParams` is a struct with logger settings:
 
-    `loggerParams.fileName` - log file prefix (full file name will be in format <fileName>_[datatime].txt and it will be stored in ./Logs folder);
-		if NULL - no file will be created
+    `loggerParams.fileName` - log file prefix (full file name will be in format <fileName>_[datatime].txt and it will 
+	be stored in ./Logs folder); if NULL - no file will be created
 		
     `loggerParams.maxLogFiles` - log files limit in ./Logs folder
 	
@@ -82,37 +82,39 @@ where `loggerParams` is a struct with logger settings:
 
 Add folowwing to your main `CMakeLists.txt`:
 
-	```bash
-	find_package(Logger REQUIRED)
-	target_link_libraries(<your_target_project> DebugTools::Logger)
-	```	
+```cmake
+find_package(Logger REQUIRED)
+...
+...
+target_link_libraries(<your_target_project> DebugTools::Logger)
+```
 
 
 ## Examples
 
-	```bash
-	#include "Logger/Logger.h"
+```c++
+#include "Logger/Logger.h"
 
-	using namespace DebugTools;
+using namespace DebugTools;
 
-	int main()
-	{
-		LoggerParams loggerParams;
-		loggerParams.fileName = "Log";
-		loggerParams.maxLogFiles = 10;
-		loggerParams.useTimestamp = true;
-		loggerParams.logToConsole = true;
-		Logger::Init(loggerParams);
-		Logger::Log("Hello\n");
-		Logger::Log("Test number: %i\n", 10);
-		Logger::Log("Test complex: %s %i %f\n", "test string", 50, 1.5);
-		return 0;
-	}
-	```		
+int main()
+{
+	LoggerParams loggerParams;
+	loggerParams.fileName = "Log";
+	loggerParams.maxLogFiles = 10;
+	loggerParams.useTimestamp = true;
+	loggerParams.logToConsole = true;
+	Logger::Init(loggerParams);
+	Logger::Log("Hello\n");
+	Logger::Log("Test number: %i\n", 10);
+	Logger::Log("Test complex: %s %i %f\n", "test string", 50, 1.5);
+	return 0;
+}
+```		
 
 If the above code was in a file called `main.cpp` and `Logger` was installed following the instructions above, on a Linux system you should be able to compile this example with:
 
-	```bash
-	g++ main.cpp -o main -lLogger
-	```	
+```bash
+g++ main.cpp -o main -lLogger
+```	
 
