@@ -66,7 +66,7 @@ Stream logger, supports output into file and console
 where `loggerParams` is a struct with logger settings:
 
     `loggerParams.fileName` - log file prefix (full file name will be in format <fileName>_[datatime].txt and it will 
-	be stored in ./Logs folder); if NULL - no file will be created
+	be stored in the './Logs' folder); if NULL - no file will be created
 		
     `loggerParams.maxLogFiles` - log files limit in ./Logs folder
 	
