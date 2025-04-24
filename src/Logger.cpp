@@ -3,8 +3,13 @@
 #include <ctime>
 #include <memory.h>
 #include <string>
-#include <dirent.h>
-#include <sys/stat.h> 
+#include <filesystem>
+#include <sys/stat.h>
+#include <vector>
+#include <algorithm>
+
+using namespace std;
+namespace fs = std::filesystem;
 
 namespace DebugTools
 {
@@ -25,51 +30,35 @@ namespace DebugTools
 	{
 		const char* logsDir = "./Logs/";
 		std::string logPath = logsDir;
-		struct stat st;
 		// check if Logs dir exist
-		if ((stat(logsDir, &st) == 0) && (((st.st_mode) & S_IFMT) == S_IFDIR))
+		if (std::filesystem::exists(logsDir))
 		{
-			//Log("'%s' is present\n", logsDir);
-			struct dirent** namelist;
-			int n = scandir(logsDir, &namelist, NULL, alphasort);
-			if (n < 0)
+			int logCounter = 0;
+			vector<fs::path> filesInDir;
+			copy(fs::directory_iterator(logsDir), fs::directory_iterator(), back_inserter(filesInDir));
+			std::sort(filesInDir.rbegin(), filesInDir.rend());
+
+			for (const string& filename : filesInDir)
 			{
-				perror("scandir");
-				return;
-			}
-			else 
-			{
-				// delete old logs
-				int logCounter = 0;
-				while (n--) 
+				fs::path p(filename);
+				if(!is_regular_file(p) || !p.filename().string().find(fileName) == 0) // not a file or some other then log template file
+					continue;
+					
+				++logCounter;
+				//Log("find logFile logCounter=%i filename='%s'\n", logCounter, filename.c_str());
+				// delete old logs					
+				if(logCounter >= maxLogFiles)
 				{
-					if(namelist[n]->d_type == DT_REG) // test if item is a file
-					{
-						//Log("file: %s\n", namelist[n]->d_name);
-						std::string fn = namelist[n]->d_name;
-						if(fn.find(fileName) == 0)
-						{
-							++logCounter;
-							//Log("find logFile logCounter=%i\n", logCounter);
-							if(logCounter >= maxLogFiles)
-							{
-								fn.insert(0, logPath);
-								std::remove(fn.c_str());
-								//Log("file '%s' was removed\n", fn.c_str());
-							}
-						}
-					}
-					free(namelist[n]);
-				}
-				free(namelist);
+					fs::remove(p);
+					//Log("file '%s' was removed\n", filename.c_str());
+				}				
 			}
-			
 		}
 		else // need create Logs dir
 		{
-			if(mkdir(logsDir, 0755) != 0)
+			if(!fs::create_directory(logsDir))
 			{
-				perror("mkdir");
+				Log("Can't create '%s' dirrectory!\n", logsDir);
 				return;
 			}
 			Log("'%s' was created\n", logsDir);
