@@ -82,7 +82,7 @@ namespace DebugTools
 		if(logger.useTimestamp)
 			tzset();
 
-		if(initParams.fileName)
+		if(initParams.fileName && *initParams.fileName != '\0')
 			logger.OpenLogFile(initParams.fileName, initParams.maxLogFiles);
 	}
 

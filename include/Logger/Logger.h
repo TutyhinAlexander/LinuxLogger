@@ -3,6 +3,12 @@
 
 #include <stdio.h>
 
+#ifdef LOG_ON
+	#define LOG(...) Logger::Log(__VA_ARGS__)
+#else
+	#define LOG(...) 
+#endif // LOG_ON
+
 namespace DebugTools
 {
 	struct LoggerParams
