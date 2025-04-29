@@ -17,8 +17,8 @@ namespace DebugTools
 	
 	Logger::~Logger()
 	{
-		if(getInstance().logFile)
-			fclose(getInstance().logFile);
+		if(logFile)
+			fclose(logFile);
 	}
 
 	Logger& Logger::getInstance()
@@ -45,12 +45,12 @@ namespace DebugTools
 					continue;
 					
 				++logCounter;
-				//Log("find logFile logCounter=%i filename='%s'\n", logCounter, filename.c_str());
+				//LOG("find logFile logCounter=%i filename='%s'\n", logCounter, filename.c_str());
 				// delete old logs					
 				if(logCounter >= maxLogFiles)
 				{
 					fs::remove(p);
-					//Log("file '%s' was removed\n", filename.c_str());
+					//LOG("file '%s' was removed\n", filename.c_str());
 				}				
 			}
 		}
@@ -58,25 +58,26 @@ namespace DebugTools
 		{
 			if(!fs::create_directory(logsDir))
 			{
-				Log("Can't create '%s' dirrectory!\n", logsDir);
+				LOG("Can't create '%s' dirrectory!\n", logsDir);
 				return;
 			}
-			Log("'%s' was created\n", logsDir);
+			LOG("'%s' was created\n", logsDir);
 		}
 		
 		logPath.append(fileName);
 		time_t timestamp = time(NULL);
 		struct tm datetime = *localtime(&timestamp);
-		strftime(timebuf, 50, "_[%Y-%b-%d_%H:%M:%S].txt", &datetime);
-		logPath.append(timebuf);
+		strftime(msgbuf, 50, "_[%Y-%b-%d_%H:%M:%S].txt", &datetime);
+		logPath.append(msgbuf);
 
-		Log("logPath: '%s'\n", logPath.c_str());
+		LOG("logPath: '%s'\n", logPath.c_str());
 		logFile = fopen(logPath.c_str(), "w");
 	}
 
 	void Logger::Init(LoggerParams& initParams)
 	{
 		Logger& logger = getInstance();
+		logger.inited = true;
 		logger.useTimestamp = initParams.useTimestamp;
 		logger.logToConsole = initParams.logToConsole;
 		if(logger.useTimestamp)
@@ -89,31 +90,53 @@ namespace DebugTools
 	void Logger::Log(const char* msg, ...)
 	{
 		Logger& logger = getInstance();
-		if (logger.useTimestamp)
-		{
-			time_t timestamp = time(NULL);
-			struct tm datetime = *localtime(&timestamp);
-			strftime(logger.timebuf, 50, "[%Y-%b-%d_%H:%M:%S]", &datetime);
+		if(!logger.inited)
+			return;
 
-			if(logger.logFile)
-				fprintf(logger.logFile, "%s ", logger.timebuf);
-
-			if(logger.logToConsole)
-				printf("%s ", logger.timebuf);
+		size_t len = 0;
+		{// additional scope for limiting lock time of lock_guard 
+			lock_guard<std::mutex> lock(logger.msgQueueMutex);			
+			if (logger.useTimestamp)
+			{
+				time_t timestamp = time(NULL);
+				struct tm datetime = *localtime(&timestamp);
+				len = strftime(logger.msgbuf, 50, "[%Y-%b-%d_%H:%M:%S] ", &datetime);
+			}
+			
+			va_list args;
+			va_start(args, msg);
+			vsprintf(logger.msgbuf + len, msg, args);
+			va_end(args);
+		
+			logger.messagesQueue.push(string(logger.msgbuf));
+			len = logger.messagesQueue.size();
 		}
 
-		va_list args;
-		va_start(args, msg);
-		if (logger.logFile)
+		if(len == 1)
+			logger.ProcessQueueMessage();
+	}
+	
+	void Logger::ProcessQueueMessage()
+	{
+		unique_lock<mutex> queueLock(msgQueueMutex);
+		string msg = messagesQueue.front();
+		queueLock.unlock();
+		
+		if (logFile)
 		{
-			vfprintf(logger.logFile, msg, args);
-			fflush(logger.logFile);
+			fprintf(logFile, msg.c_str());
+			fflush(logFile);
 		}
-
-		if (logger.logToConsole)
-			vprintf(msg, args);
-
-		va_end(args);
+		
+		if (logToConsole)
+			printf(msg.c_str());
+			
+		queueLock.lock();
+		messagesQueue.pop();
+		bool isEmpty = messagesQueue.empty();
+		queueLock.unlock();
+		if(!isEmpty)
+			ProcessQueueMessage();
 	}
 }
 

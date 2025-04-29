@@ -2,12 +2,14 @@
 #define __LOGGER_H_
 
 #include <stdio.h>
+#include <queue>
+#include <mutex>
 
-#ifdef LOG_ON
-	#define LOG(...) Logger::Log(__VA_ARGS__)
-#else
+#ifdef LOG_OFF
 	#define LOG(...) 
-#endif // LOG_ON
+#else
+	#define LOG(...) Logger::Log(__VA_ARGS__)	
+#endif // LOG_OFF
 
 namespace DebugTools
 {
@@ -18,19 +20,25 @@ namespace DebugTools
 		const char* fileName = NULL;
 		int maxLogFiles = 1; // if > 1 then each run a new log file will be created until reach maxLogFiles. After will rewrite first file.
 	};
+	
 		
 	class Logger
 	{
 	private:
 		static Logger instance;
+		bool inited = false;
+		bool finish = false;
 		LoggerParams params;
 		FILE* logFile = NULL;
-		char timebuf[128];
+		char msgbuf[255];
 		bool useTimestamp = false;
 		bool logToConsole = true;
+		std::queue<std::string> messagesQueue;
+		std::mutex msgQueueMutex;
 
 		static Logger& getInstance();
 		void OpenLogFile(const char* fileName, int maxLogFiles);
+		void ProcessQueueMessage();
 	
 	public:
 		~Logger();
