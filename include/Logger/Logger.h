@@ -1,6 +1,7 @@
 #ifndef __LOGGER_H_
 #define __LOGGER_H_
 
+#include <string>
 #include <stdio.h>
 #include <queue>
 #include <mutex>
