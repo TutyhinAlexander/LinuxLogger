@@ -99,7 +99,7 @@ namespace DebugTools
 			{
 				time_t timestamp = time(NULL);
 				struct tm datetime = *localtime(&timestamp);
-				len = strftime(logger.msgbuf, 50, "[%Y-%b-%d_%H:%M:%S] ", &datetime);
+				len = strftime(logger.msgbuf, 50, "[%Y-%b-%d_%H-%M-%S] ", &datetime);
 			}
 			
 			va_list args;
