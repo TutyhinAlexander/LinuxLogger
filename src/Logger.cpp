@@ -25,9 +25,8 @@ namespace DebugTools
 		return instance;
 	}
 	
-	void Logger::OpenLogFile(const char* fileName, int maxLogFiles)
+	void Logger::OpenLogFile(const char* logsDir, const char* fileName, int maxLogFiles)
 	{
-		const char* logsDir = "./Logs/";
 		std::string logPath = logsDir;
 		// check if Logs dir exist
 		if (std::filesystem::exists(logsDir))
@@ -83,7 +82,7 @@ namespace DebugTools
 			tzset();
 
 		if(initParams.fileName && *initParams.fileName != '\0')
-			logger.OpenLogFile(initParams.fileName, initParams.maxLogFiles);
+			logger.OpenLogFile(initParams.logsDir, initParams.fileName, initParams.maxLogFiles);
 	}
 
 	void Logger::Log(const char* msg, ...)

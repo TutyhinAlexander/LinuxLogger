@@ -18,6 +18,7 @@ namespace DebugTools
 	{
 		bool useTimestamp = false;
 		bool logToConsole = true;
+		const char* logsDir = "./Logs/";
 		const char* fileName = NULL;
 		int maxLogFiles = 1; // if > 1 then each run a new log file will be created until reach maxLogFiles. After will rewrite first file.
 	};
@@ -38,7 +39,7 @@ namespace DebugTools
 		std::mutex msgQueueMutex;
 
 		static Logger& getInstance();
-		void OpenLogFile(const char* fileName, int maxLogFiles);
+		void OpenLogFile(const char* logsDir, const char* fileName, int maxLogFiles);
 		void ProcessQueueMessage();
 	
 	public:
